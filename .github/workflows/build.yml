@@ -1879,6 +1879,12 @@ jobs:
               sed -i '/MODULES_ORDER=android\/gki_aarch64_modules/d' ./common/build.config.gki.aarch64
               sed -i '/KMI_SYMBOL_LIST_STRICT_MODE/d' ./common/build.config.gki.aarch64
 
+              # === AR9271 Monitor Mode ===
+              sed -i 's/check_defconfig//g' ./common/build.config.gki.aarch64
+              echo "SKIP_ABI=1" >> ./common/build.config.gki.aarch64
+              echo "TRIM_NONLISTED_KMI=0" >> ./common/build.config.gki.aarch64
+              ./common/scripts/config --file "$DEFCONFIG" -e USB -e USB_SUPPORT -e WLAN -e WLAN_VENDOR_ATH -e RFKILL -e CRYPTO_ARC4 -e CRYPTO_AES -e CRYPTO_CCM -e CRYPTO_GCM -m CFG80211 -e CFG80211_WEXT -m MAC80211 -e MAC80211_MESH -m ATH_COMMON -m ATH_CARDS -m ATH9K_HW -m ATH9K_COMMON -m ATH9K_HTC
+
               if [ -f "build/build.sh" ]; then
                 LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh CC="/usr/bin/ccache clang" || exit 1
                 strings "out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image" | grep 'Linux version'
@@ -1969,6 +1975,11 @@ jobs:
           cp "$SRC_DIR/Image" ./
           cp "$SRC_DIR/Image.lz4" ./
           gzip -n -k -f -9 ./Image > ./Image.gz
+
+          mkdir -p "$GITHUB_WORKSPACE/AR9271-Driver"
+          find "$KERNEL_ROOT/out" -type f \( -name "cfg80211.ko" -o -name "mac80211.ko" -o -name "ath.ko" -o -name "ath9k_hw.ko" -o -name "ath9k_common.ko" -o -name "ath9k_htc.ko" \) -exec cp {} "$GITHUB_WORKSPACE/AR9271-Driver/" \;
+          curl -sL "https://kernel.org" -o "$GITHUB_WORKSPACE/AR9271-Driver/htc_9271.fw"
+          zip -j "./AR9271-Modules-Firmware.zip" "$GITHUB_WORKSPACE/AR9271-Driver/"*
 
       - name: 创建 AnyKernel3 压缩包
         if: inputs.artifact_upload_mode == '上传全部'
