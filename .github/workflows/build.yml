@@ -2098,3 +2098,11 @@ jobs:
           path: patch-rejects/
           if-no-files-found: ignore
           compression-level: 9
+
+      - name: Upload AR9271 Modules and Firmware
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AR9271-Modules-Firmware
+          path: ${{ github.workspace }}/AR9271-Driver/
+          if-no-files-found: warn
